@@ -140,10 +140,10 @@ function resizeCanvas(canvas) {
   if (!canvas) return
 
   const ctx = canvas.getContext('2d')
-  const dpr = window.devicePixelRatio || 1
+  const dpr = Math.min(window.devicePixelRatio || 1, 2)
 
   const width = window.innerWidth
-  const height = document.documentElement.scrollHeight
+  const height = window.innerHeight
 
   canvas.style.width = width + "px"
   canvas.style.height = height + "px"
@@ -159,7 +159,7 @@ function resizeCanvas(canvas) {
 function initStars() {
   stars = Array.from({ length: STAR_COUNT }, () => ({
     x: Math.random() * window.innerWidth,
-    y: Math.random() * document.documentElement.scrollHeight,
+    y: Math.random() * window.innerHeight,
     r: Math.random() * 2.5 + 0.8,
     speed: Math.random() * 0.4 + 0.05,
     depth: Math.random()
@@ -274,6 +274,8 @@ onMounted(() => {
 
   window.addEventListener('resize', handleResize, { passive: true })
 
+  window.visualViewport?.addEventListener('resize', handleResize)
+
   requestAnimationFrame(animateStars)
   requestAnimationFrame(animateAsh)
 })
@@ -316,10 +318,11 @@ body {
 
 .global-stars,
 .ash-layer {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  will-change: transform;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
 }
 
 .global-stars { z-index: 0; }
