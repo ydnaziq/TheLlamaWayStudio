@@ -269,13 +269,18 @@ function animate() {
 
 /* ================= Resize Handling ================= */
 
-function handleResize() {
-  clearTimeout(resizeTimeout)
+let lastWidth = window.innerWidth
 
-  resizeTimeout = setTimeout(() => {
-    resizeCanvas(globalStars.value)
-    resizeCanvas(ashLayer.value)
-  }, 150)
+function handleResize() {
+  const newWidth = window.innerWidth
+
+  // Ignore height-only changes (mobile address bar scroll)
+  if (newWidth === lastWidth) return
+
+  lastWidth = newWidth
+
+  resizeCanvas(globalStars.value)
+  resizeCanvas(ashLayer.value)
 }
 
 /* ================= Lifecycle ================= */
@@ -316,7 +321,10 @@ onBeforeUnmount(() => {
 html, body {
   margin: 0;
   padding: 0;
-  background: #020510; /* fallback so page never turns white */
+  width: 100%;
+  min-height: 100%;
+  background: #020510;
+  overflow-x: hidden;
 }
 
 body {
@@ -331,7 +339,7 @@ body {
 .page {
   position: relative;
   width: 100%;
-  min-height: 100svh;   /* better mobile viewport handling */
+  min-height: 100%;
   background: linear-gradient(to bottom, #020510 0%, #0d1430 100%);
 }
 
