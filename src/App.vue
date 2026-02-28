@@ -115,109 +115,168 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue'
+import { onMounted, onBeforeUnmount, ref } from 'vue'
 
-import bannerImg from './assets/images/banner.png'
-import bgImage from './assets/images/background.png'
 import gameplayGif from './assets/images/gameplay.gif'
 import screenshot1 from './assets/images/screenshot1.png'
 import screenshot2 from './assets/images/screenshot2.png'
-import icon from './assets/images/icon.png'
 
 const globalStars = ref(null)
 const ashLayer = ref(null)
 
-onMounted(() => {
+const isMobile = window.innerWidth < 768
 
-  // Scroll Reveal
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) entry.target.classList.add('visible')
-    })
-  }, { threshold: 0.15 })
+const STAR_COUNT = isMobile ? 120 : 250
+const ASH_COUNT = isMobile ? 60 : 120
 
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el))
+let animationRunning = true
+let stars = []
+let ashParticles = []
 
-  // ===== STARFIELD =====
-  const canvas = globalStars.value
+function resizeCanvas(canvas) {
+  if (!canvas) return
+
   const ctx = canvas.getContext('2d')
+  const dpr = window.devicePixelRatio || 1
 
-  function resize() {
-    canvas.width = window.innerWidth
-    canvas.height = document.body.scrollHeight
-  }
+  canvas.width = window.innerWidth * dpr
+  canvas.height = document.body.scrollHeight * dpr
 
-  resize()
-  window.addEventListener('resize', resize)
+  canvas.style.width = window.innerWidth + 'px'
+  canvas.style.height = document.body.scrollHeight + 'px'
 
-  const stars = Array.from({ length: 250 }, () => ({
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+}
+
+/* ---------- STARFIELD ---------- */
+
+function initStars() {
+  stars = Array.from({ length: STAR_COUNT }, () => ({
     x: Math.random() * window.innerWidth,
     y: Math.random() * document.body.scrollHeight,
-    r: Math.random() * 2.8 + 0.8,
+    r: Math.random() * 2.5 + 0.8,
     speed: Math.random() * 0.4 + 0.05,
     depth: Math.random()
   }))
+}
 
-  function animateStars() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height)
+function animateStars() {
+  if (!animationRunning) return
 
-    stars.forEach(star => {
-      star.y += star.speed * (1 + star.depth)
-      if (star.y > canvas.height) {
-        star.y = 0
-        star.x = Math.random() * canvas.width
-      }
+  const canvas = globalStars.value
+  const ctx = canvas.getContext('2d')
 
-      ctx.beginPath()
-      ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2)
-      ctx.fillStyle = `rgba(255,255,255,${0.4 + star.depth})`
-      ctx.shadowBlur = 15 * star.depth
-      ctx.shadowColor = "white"
-      ctx.fill()
-    })
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
 
-    requestAnimationFrame(animateStars)
-  }
+  ctx.shadowBlur = 12
+  ctx.shadowColor = "white"
 
-  animateStars()
+  stars.forEach(star => {
+    star.y += star.speed * (1 + star.depth)
 
-  // ===== FOREGROUND ASH =====
-  const ashCanvas = ashLayer.value
-  const ashCtx = ashCanvas.getContext('2d')
+    if (star.y > canvas.height) {
+      star.y = 0
+      star.x = Math.random() * window.innerWidth
+    }
 
-  function resizeAsh() {
-    ashCanvas.width = window.innerWidth
-    ashCanvas.height = document.body.scrollHeight
-  }
+    ctx.beginPath()
+    ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2)
 
-  resizeAsh()
-  window.addEventListener('resize', resizeAsh)
+    ctx.fillStyle = `rgba(255,255,255,${0.4 + star.depth})`
+    ctx.fill()
+  })
 
-  const ash = Array.from({ length: 120 }, () => ({
+  requestAnimationFrame(animateStars)
+}
+
+/* ---------- ASH PARTICLES ---------- */
+
+function initAsh() {
+  ashParticles = Array.from({ length: ASH_COUNT }, () => ({
     x: Math.random() * window.innerWidth,
     y: Math.random() * document.body.scrollHeight,
     r: Math.random() * 3 + 1,
     speed: Math.random() * 0.3 + 0.05,
     opacity: Math.random() * 0.3 + 0.05
   }))
+}
 
-  function animateAsh() {
-    ashCtx.clearRect(0, 0, ashCanvas.width, ashCanvas.height)
+function animateAsh() {
+  if (!animationRunning) return
 
-    ash.forEach(p => {
-      p.y -= p.speed
-      if (p.y < 0) p.y = ashCanvas.height
+  const canvas = ashLayer.value
+  const ctx = canvas.getContext('2d')
 
-      ashCtx.beginPath()
-      ashCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
-      ashCtx.fillStyle = `rgba(220,50,70,${p.opacity})`
-      ashCtx.fill()
+  ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+  ashParticles.forEach(p => {
+    p.y -= p.speed
+
+    if (p.y < 0) p.y = canvas.height
+
+    ctx.beginPath()
+    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
+
+    ctx.fillStyle = `rgba(220,50,70,${p.opacity})`
+    ctx.fill()
+  })
+
+  requestAnimationFrame(animateAsh)
+}
+
+/* ---------- RESIZE HANDLING ---------- */
+
+let resizeTimeout
+
+function handleResize() {
+  clearTimeout(resizeTimeout)
+
+  resizeTimeout = setTimeout(() => {
+    resizeCanvas(globalStars.value)
+    resizeCanvas(ashLayer.value)
+
+    initStars()
+    initAsh()
+  }, 150)
+}
+
+/* ---------- INTERSECTION REVEAL ---------- */
+
+function initRevealObserver() {
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible')
+      }
     })
+  }, { threshold: 0.15 })
 
-    requestAnimationFrame(animateAsh)
-  }
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el))
+}
 
-  animateAsh()
+/* ---------- LIFECYCLE ---------- */
+
+onMounted(() => {
+  const starCanvas = globalStars.value
+  const ashCanvas = ashLayer.value
+
+  resizeCanvas(starCanvas)
+  resizeCanvas(ashCanvas)
+
+  initStars()
+  initAsh()
+
+  initRevealObserver()
+
+  window.addEventListener('resize', handleResize, { passive: true })
+
+  requestAnimationFrame(animateStars)
+  requestAnimationFrame(animateAsh)
+})
+
+onBeforeUnmount(() => {
+  animationRunning = false
+  window.removeEventListener('resize', handleResize)
 })
 </script>
 
@@ -248,9 +307,9 @@ body {
 .global-stars,
 .ash-layer {
   position: absolute;
-  top: 0;
-  left: 0;
+  inset: 0;
   pointer-events: none;
+  will-change: transform;
 }
 
 .global-stars { z-index: 0; }
@@ -413,7 +472,8 @@ body {
 .media-card {
   width: 100%;
   border-radius: 20px;
-  transition: transform 0.5s ease, box-shadow 0.5s ease;
+  transition: transform 0.5s ease;
+  will-change: transform;
 }
 
 .media-card:hover {
@@ -421,11 +481,12 @@ body {
   box-shadow: 0 40px 100px rgba(220,50,70,0.8);
 }
 
-/* TRAILER */
-.trailer {
-  margin-top: 120px;
-  display: flex;
-  justify-content: center;
+.trailer iframe {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  height: auto;
+  max-width: 1000px;
+  border-radius: 24px;
 }
 
 .trailer iframe {
@@ -485,6 +546,32 @@ body {
   .hero-box {
     flex-direction: column;
     text-align: center;
+  }
+}
+
+@media (max-width: 768px) {
+
+  .game-title {
+    font-size: 2.8rem;
+    letter-spacing: 3px;
+  }
+
+  .headline {
+    font-size: 2rem;
+  }
+
+  .content-grid {
+    grid-template-columns: 1fr;
+    gap: 40px;
+  }
+
+  .story-card {
+    font-size: 1.05rem;
+    padding: 28px;
+  }
+
+  .game-section {
+    padding: 60px 6%;
   }
 }
 </style>
