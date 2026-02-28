@@ -1,30 +1,489 @@
-<script setup>
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <div>
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://vuejs.org/" target="_blank">
-      <img src="./assets/vue.svg" class="logo vue" alt="Vue logo" />
-    </a>
+  <div class="page">
+
+    <!-- GLOBAL STARFIELD -->
+    <canvas ref="globalStars" class="global-stars"></canvas>
+
+    <!-- FOREGROUND ASH -->
+    <canvas ref="ashLayer" class="ash-layer"></canvas>
+
+    <!-- ================= HERO SECTION ================= -->
+<section class="hero-section">
+
+  <div class="hero-background"></div>
+
+  <div class="hero-content">
+    <h1 class="game-title">The Last Cat</h1>
+    <p class="game-tagline">
+      A ritual demands something living.
+    </p>
+
+    <div class="hero-buttons">
+      <a href="#trailer" class="primary-btn">Watch Trailer</a>
+      <a href="https://thellamaway.itch.io/the-last-cat-on-earth" 
+         target="_blank" 
+         class="secondary-btn">
+         View on Itch.io
+      </a>
+    </div>
+
+    <p class="studio-credit">
+      A game by TheLlamaWay Studio
+    </p>
   </div>
-  <HelloWorld msg="Vite + Vue" />
+
+</section>
+
+    <!-- ================= GAME SECTION ================= -->
+    <section class="game-section">
+
+      <h2 class="headline">A Heroic Tale in a 2D Platformer</h2>
+
+      <div class="content-grid">
+
+        <!-- STORY -->
+        <div class="story-card reveal">
+          <p>
+            Your friends are gone.
+
+            <br /><br />
+
+            But loss is not the true burden.
+
+            <br /><br />
+
+            Resurrection demands ritual —
+            and ritual demands something living.
+
+            <br /><br />
+
+            A cat.
+
+            <br /><br />
+
+            Journey through a desolate, atmospheric world filled with fractured souls and fading memories.
+            Confront eternal damnation. Confront isolation.
+            Confront the silence that waits when companionship is taken from you.
+
+            <br /><br />
+
+            A heroic tale woven into a haunting 2D platformer.
+          </p>
+
+          <div class="itch-wrapper">
+            <iframe
+              frameborder="0"
+              src="https://itch.io/embed/4293036"
+              width="552"
+              height="167">
+              <a href="https://thellamaway.itch.io/the-last-cat-on-earth">
+                The Last Cat (on earth) by TheLlamaWay
+              </a>
+            </iframe>
+          </div>
+        </div>
+
+        <!-- MEDIA -->
+        <div class="media-stack">
+          <img :src="screenshot1" class="media-card reveal">
+          <img :src="screenshot2" class="media-card reveal">
+          <img :src="gameplayGif" class="media-card reveal">
+        </div>
+
+      </div>
+
+      <!-- TRAILER -->
+      <div id="trailer" class="trailer reveal">
+        <iframe
+          src="https://www.youtube.com/embed/_A4sicLw2yA"
+          title="The Last Cat Trailer"
+          frameborder="0"
+          allowfullscreen>
+        </iframe>
+      </div>
+
+    </section>
+
+    <!-- WHISPER FOOTER -->
+    <footer class="whisper-footer">
+      <p class="whisper-text">And you Timmy, you shall go down in history as the LAST CAT!</p>
+      <p class="whisper-text">The GLORIOUS SAVIOUR of ALL cat kind!</p>
+    </footer>
+
+  </div>
 </template>
 
-<style scoped>
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
+<script setup>
+import { onMounted, ref } from 'vue'
+
+import bannerImg from './assets/images/banner.png'
+import bgImage from './assets/images/background.png'
+import gameplayGif from './assets/images/gameplay.gif'
+import screenshot1 from './assets/images/screenshot1.png'
+import screenshot2 from './assets/images/screenshot2.png'
+import icon from './assets/images/icon.png'
+
+const globalStars = ref(null)
+const ashLayer = ref(null)
+
+onMounted(() => {
+
+  // Scroll Reveal
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) entry.target.classList.add('visible')
+    })
+  }, { threshold: 0.15 })
+
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el))
+
+  // ===== STARFIELD =====
+  const canvas = globalStars.value
+  const ctx = canvas.getContext('2d')
+
+  function resize() {
+    canvas.width = window.innerWidth
+    canvas.height = document.body.scrollHeight
+  }
+
+  resize()
+  window.addEventListener('resize', resize)
+
+  const stars = Array.from({ length: 250 }, () => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * document.body.scrollHeight,
+    r: Math.random() * 2.8 + 0.8,
+    speed: Math.random() * 0.4 + 0.05,
+    depth: Math.random()
+  }))
+
+  function animateStars() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height)
+
+    stars.forEach(star => {
+      star.y += star.speed * (1 + star.depth)
+      if (star.y > canvas.height) {
+        star.y = 0
+        star.x = Math.random() * canvas.width
+      }
+
+      ctx.beginPath()
+      ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2)
+      ctx.fillStyle = `rgba(255,255,255,${0.4 + star.depth})`
+      ctx.shadowBlur = 15 * star.depth
+      ctx.shadowColor = "white"
+      ctx.fill()
+    })
+
+    requestAnimationFrame(animateStars)
+  }
+
+  animateStars()
+
+  // ===== FOREGROUND ASH =====
+  const ashCanvas = ashLayer.value
+  const ashCtx = ashCanvas.getContext('2d')
+
+  function resizeAsh() {
+    ashCanvas.width = window.innerWidth
+    ashCanvas.height = document.body.scrollHeight
+  }
+
+  resizeAsh()
+  window.addEventListener('resize', resizeAsh)
+
+  const ash = Array.from({ length: 120 }, () => ({
+    x: Math.random() * window.innerWidth,
+    y: Math.random() * document.body.scrollHeight,
+    r: Math.random() * 3 + 1,
+    speed: Math.random() * 0.3 + 0.05,
+    opacity: Math.random() * 0.3 + 0.05
+  }))
+
+  function animateAsh() {
+    ashCtx.clearRect(0, 0, ashCanvas.width, ashCanvas.height)
+
+    ash.forEach(p => {
+      p.y -= p.speed
+      if (p.y < 0) p.y = ashCanvas.height
+
+      ashCtx.beginPath()
+      ashCtx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
+      ashCtx.fillStyle = `rgba(220,50,70,${p.opacity})`
+      ashCtx.fill()
+    })
+
+    requestAnimationFrame(animateAsh)
+  }
+
+  animateAsh()
+})
+</script>
+
+<style>
+@font-face {
+  font-family: 'Jersey';
+  src: url('./assets/font/Jersey.ttf') format('truetype');
 }
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
+
+html {
+  scroll-behavior: smooth;
 }
-.logo.vue:hover {
-  filter: drop-shadow(0 0 2em #42b883aa);
+
+#trailer {
+  scroll-margin-top: 120px;
+}
+
+body {
+  margin: 0;
+  font-family: 'Jersey', sans-serif;
+  background: linear-gradient(to bottom, #020510 0%, #0d1430 100%);
+  color: #ffffff;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.global-stars,
+.ash-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  pointer-events: none;
+}
+
+.global-stars { z-index: 0; }
+.ash-layer { z-index: 2; }
+
+/* HERO */
+.hero-section {
+  position: relative;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.hero-background {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to bottom, rgba(2,5,16,0.4), rgba(2,5,16,0.9)),
+    url('./assets/images/background.png') center center no-repeat;
+  background-size: cover;
+  z-index: 0;
+}
+
+.hero-content {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  max-width: 900px;
+  padding: 20px;
+}
+
+.game-title {
+  font-size: 5rem;
+  letter-spacing: 6px;
+  margin: 0;
+  text-transform: uppercase;
+  text-shadow: 0 0 40px rgba(220,50,70,0.8);
+}
+
+.game-tagline {
+  font-size: 1.6rem;
+  margin-top: 20px;
+  opacity: 0.85;
+}
+
+.hero-buttons {
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.primary-btn {
+  padding: 14px 36px;
+  background: rgba(220,50,70,0.9);
+  border-radius: 40px;
+  color: white;
+  text-decoration: none;
+  letter-spacing: 2px;
+  transition: all 0.4s ease;
+  animation: glowPulse 3s ease-in-out infinite;
+}
+
+.primary-btn:hover {
+  background: rgba(255,70,90,1);
+  box-shadow: 0 0 35px rgba(220,50,70,0.9);
+  transform: translateY(-2px);
+}
+
+/* Subtle breathing glow */
+@keyframes glowPulse {
+  0% {
+    box-shadow: 0 0 15px rgba(220,50,70,0.4);
+  }
+  50% {
+    box-shadow: 0 0 35px rgba(220,50,70,0.7);
+  }
+  100% {
+    box-shadow: 0 0 15px rgba(220,50,70,0.4);
+  }
+}
+
+.secondary-btn {
+  padding: 14px 36px;
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 40px;
+  color: white;
+  text-decoration: none;
+  letter-spacing: 2px;
+  transition: all 0.4s ease;
+}
+
+.secondary-btn:hover {
+  border-color: rgba(220,50,70,0.9);
+  box-shadow: 0 0 20px rgba(220,50,70,0.6);
+}
+
+.studio-credit {
+  margin-top: 60px;
+  font-size: 0.9rem;
+  letter-spacing: 3px;
+  opacity: 0.5;
+}
+.hero-icon {
+  width: 260px;
+  border-radius: 24px;
+}
+
+.hero-title {
+  font-size: 4rem;
+  margin: 0;
+  letter-spacing: 3px;
+}
+
+.hero-sub {
+  font-size: 1.2rem;
+  opacity: 0.85;
+}
+
+/* GAME SECTION */
+.game-section {
+  padding: 80px 10%;
+  background: linear-gradient(to bottom, rgba(10,15,36,0.95), rgba(20,25,55,0.9)),
+              url('./assets/images/background.png') center top no-repeat;
+  background-size: cover;
+}
+
+.headline {
+  text-align: center;
+  font-size: 3rem;
+  margin-bottom: 60px;
+}
+
+.content-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 80px;
+}
+
+.story-card {
+  background: rgba(10, 15, 36, 0.7);
+  padding: 40px;
+  border-radius: 22px;
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(255,255,255,0.05);
+  box-shadow: 0 0 60px rgba(220,50,70,0.25);
+  font-size: 1.3rem;
+  line-height: 1.6;
+}
+
+.media-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.media-card {
+  width: 100%;
+  border-radius: 20px;
+  transition: transform 0.5s ease, box-shadow 0.5s ease;
+}
+
+.media-card:hover {
+  transform: translateY(-16px) scale(1.05);
+  box-shadow: 0 40px 100px rgba(220,50,70,0.8);
+}
+
+/* TRAILER */
+.trailer {
+  margin-top: 120px;
+  display: flex;
+  justify-content: center;
+}
+
+.trailer iframe {
+  width: 100%;
+  max-width: 1000px;
+  height: 550px;
+  border-radius: 24px;
+  box-shadow: 0 0 80px rgba(220,50,70,0.6);
+  transition: transform 0.5s ease;
+}
+
+.trailer iframe:hover {
+  transform: scale(1.02);
+}
+
+/* WHISPER */
+.whisper-footer {
+  text-align: center;
+  padding: 140px 20px;
+  opacity: 0;
+  animation: fadeInWhisper 3s ease forwards;
+  animation-delay: 2s;
+}
+
+.whisper-text {
+  font-size: 1.1rem;
+  letter-spacing: 4px;
+  color: rgba(255,255,255,0.6);
+  text-transform: uppercase;
+}
+
+@keyframes fadeInWhisper {
+  to { opacity: 1; }
+}
+
+/* REVEAL */
+.reveal {
+  opacity: 0;
+  transform: translateY(60px);
+  transition: all 1s ease;
+}
+
+.reveal.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 1000px) {
+  .content-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .trailer iframe {
+    height: 350px;
+  }
+
+  .hero-box {
+    flex-direction: column;
+    text-align: center;
+  }
 }
 </style>
