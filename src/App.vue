@@ -19,7 +19,9 @@
     </p>
 
     <div class="hero-buttons">
-      <a href="#trailer" class="primary-btn">Watch Trailer</a>
+	    <button @click="scrollToTrailer" class="primary-btn">
+		    Watch Trailer
+	    </button>
       <a href="https://thellamaway.itch.io/the-last-cat-on-earth" 
          target="_blank" 
          class="secondary-btn">
@@ -94,7 +96,7 @@
       </div>
 
       <!-- TRAILER -->
-      <div id="trailer" class="trailer reveal">
+      <div id="trailer" ref="trailerRef" class="trailer reveal">
         <iframe
           src="https://www.youtube.com/embed/_A4sicLw2yA"
           title="The Last Cat Trailer"
@@ -133,6 +135,15 @@ let animationRunning = true
 let stars = []
 let ashParticles = []
 let resizeTimeout
+
+const trailerRef = ref(null)
+
+function scrollToTrailer() {
+  trailerRef.value?.scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  })
+}
 
 /* ================= Canvas Resize ================= */
 
@@ -319,7 +330,8 @@ body {
 /* Main wrapper gradient */
 .page {
   position: relative;
-  min-height: 100dvh;
+  width: 100%;
+  min-height: 100svh;   /* better mobile viewport handling */
   background: linear-gradient(to bottom, #020510 0%, #0d1430 100%);
 }
 
@@ -330,8 +342,8 @@ body {
   position: fixed;
   top: 0;
   left: 0;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
 }
 
@@ -561,3 +573,4 @@ body {
 }
 
 </style>
+
