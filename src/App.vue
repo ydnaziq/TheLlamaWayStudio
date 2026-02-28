@@ -324,13 +324,12 @@ html, body {
   width: 100%;
   min-height: 100%;
   background: #020510;
-  overflow-x: hidden;
 }
 
 body {
   font-family: 'Jersey', sans-serif;
   color: white;
-  overflow-x: hidden;
+  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
@@ -358,34 +357,25 @@ body {
 .global-stars { z-index: 0; }
 .ash-layer { z-index: 1; }
 
-/* ================= Hero Section ================= */
-
 .hero-section {
   position: relative;
-  min-height: 100dvh;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  z-index: 2;
 }
 
-/* Corrected background */
 .hero-background {
   position: absolute;
   inset: 0;
-  z-index: 0;
-
   background:
     linear-gradient(to bottom, rgba(2,5,16,0.4), rgba(2,5,16,0.9)),
-    url('./assets/images/background.png');
-
-  background-position: center;
-  background-repeat: no-repeat;
+    url('./assets/images/background.png') center center no-repeat;
   background-size: cover;
+  z-index: 0;
 }
 
-/* Hero Content */
 .hero-content {
   position: relative;
   z-index: 3;
@@ -406,6 +396,51 @@ body {
   font-size: 1.6rem;
   margin-top: 20px;
   opacity: 0.85;
+}
+
+.hero-buttons {
+  margin-top: 40px;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.primary-btn {
+  padding: 14px 36px;
+  background: rgba(220,50,70,0.9);
+  border-radius: 40px;
+  color: white;
+  text-decoration: none;
+  letter-spacing: 2px;
+  transition: all 0.4s ease;
+}
+
+.primary-btn:hover {
+  background: rgba(255,70,90,1);
+  box-shadow: 0 0 30px rgba(220,50,70,0.9);
+}
+
+.secondary-btn {
+  padding: 14px 36px;
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 40px;
+  color: white;
+  text-decoration: none;
+  letter-spacing: 2px;
+  transition: all 0.4s ease;
+}
+
+.secondary-btn:hover {
+  border-color: rgba(220,50,70,0.9);
+  box-shadow: 0 0 20px rgba(220,50,70,0.6);
+}
+
+.studio-credit {
+  margin-top: 60px;
+  font-size: 0.9rem;
+  letter-spacing: 3px;
+  opacity: 0.5;
 }
 
 /* ================= Buttons ================= */
@@ -522,17 +557,8 @@ body {
 
 /* ================= Footer ================= */
 
-.whisper-footer {
-  text-align: center;
-  padding: 140px 20px;
-}
 
-.whisper-text {
-  font-size: 1.1rem;
-  letter-spacing: 4px;
-  color: rgba(255,255,255,0.6);
-  text-transform: uppercase;
-}
+.whisper-footer { text-align: center; padding: 140px 20px; } .whisper-text { font-size: 1.1rem; letter-spacing: 4px; color: rgba(255,255,255,0.6); text-transform: uppercase; }
 
 /* ================= Reveal Animation ================= */
 
@@ -575,9 +601,19 @@ body {
     padding: 28px;
   }
 
-  .game-section {
-    padding: 60px 6%;
+.game-section {
+    padding: 40px 15px; /* Use small fixed padding instead of percentages */
   }
+
+  .content-grid {
+    display: block; /* Force stack instead of grid to be safe */
+    width: 100%;
+  }
+
+  .story-card {
+    width: auto;
+    word-wrap: break-word; /* Prevents long words from pushing the box wide */
+}
 }
 
 </style>
