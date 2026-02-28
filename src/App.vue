@@ -291,7 +291,6 @@ html, body {
 body {
   font-family: 'Jersey', sans-serif;
   color: white;
-  overflow-x: clip;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
 }
