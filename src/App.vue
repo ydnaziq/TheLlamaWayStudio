@@ -126,15 +126,15 @@ const ashLayer = ref(null)
 
 const isMobile = window.innerWidth < 768
 
-const STAR_COUNT = isMobile ? 120 : 250
-const ASH_COUNT = isMobile ? 60 : 120
+const STAR_COUNT = isMobile ? 70 : 100
+const ASH_COUNT = isMobile ? 70: 100
 
 let animationRunning = true
 let stars = []
 let ashParticles = []
 let resizeTimeout
 
-/* ================= Canvas Utilities ================= */
+/* ================= Canvas Resize ================= */
 
 function resizeCanvas(canvas) {
   if (!canvas) return
@@ -145,8 +145,8 @@ function resizeCanvas(canvas) {
   const width = window.innerWidth
   const height = window.innerHeight
 
-  canvas.style.width = width + "px"
-  canvas.style.height = height + "px"
+  canvas.style.width = width + 'px'
+  canvas.style.height = height + 'px'
 
   canvas.width = width * dpr
   canvas.height = height * dpr
@@ -154,7 +154,21 @@ function resizeCanvas(canvas) {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 }
 
-/* ================= Particle Initialization ================= */
+function initRevealObserver() {
+  const elements = document.querySelectorAll('.reveal')
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible')
+      }
+    })
+  }, { threshold: 0.1 })
+
+  elements.forEach(el => observer.observe(el))
+}
+
+/* ================= Particle Init ================= */
 
 function initStars() {
   stars = Array.from({ length: STAR_COUNT }, () => ({
@@ -169,69 +183,77 @@ function initStars() {
 function initAsh() {
   ashParticles = Array.from({ length: ASH_COUNT }, () => ({
     x: Math.random() * window.innerWidth,
-    y: Math.random() * document.documentElement.scrollHeight,
+    y: Math.random() * window.innerHeight,
     r: Math.random() * 3 + 1,
     speed: Math.random() * 0.3 + 0.05,
     opacity: Math.random() * 0.3 + 0.05
   }))
 }
 
-/* ================= Animation Loops ================= */
+/* ================= Drawing ================= */
 
-function animateStars() {
-  if (!animationRunning) return
-
-  const canvas = globalStars.value
-  const ctx = canvas?.getContext('2d')
-  if (!ctx) return
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-  ctx.shadowBlur = 12
-  ctx.shadowColor = "white"
-
-  const height = canvas.height / (window.devicePixelRatio || 1)
-
+function drawStars(ctx, width, height) {
   stars.forEach(star => {
     star.y += star.speed * (1 + star.depth)
 
     if (star.y > height) {
       star.y = 0
-      star.x = Math.random() * window.innerWidth
+      star.x = Math.random() * width
     }
+
+    // soft glow (no shadowBlur)
+    ctx.beginPath()
+    ctx.arc(star.x, star.y, star.r * 1.8, 0, Math.PI * 2)
+    ctx.fillStyle = 'rgba(255,255,255,0.08)'
+    ctx.fill()
 
     ctx.beginPath()
     ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2)
-    ctx.fillStyle = `rgba(255,255,255,${0.4 + star.depth})`
+    ctx.fillStyle = `rgba(255,255,255,${0.5 + star.depth})`
     ctx.fill()
   })
-
-  requestAnimationFrame(animateStars)
 }
 
-function animateAsh() {
-  if (!animationRunning) return
-
-  const canvas = ashLayer.value
-  const ctx = canvas?.getContext('2d')
-  if (!ctx) return
-
-  ctx.clearRect(0, 0, canvas.width, canvas.height)
-
-  const height = canvas.height / (window.devicePixelRatio || 1)
-
+function drawAsh(ctx, width, height) {
   ashParticles.forEach(p => {
     p.y -= p.speed
 
-    if (p.y < 0) p.y = height
+    if (p.y < 0) {
+      p.y = height
+      p.x = Math.random() * width
+    }
 
     ctx.beginPath()
     ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
     ctx.fillStyle = `rgba(220,50,70,${p.opacity})`
     ctx.fill()
   })
+}
 
-  requestAnimationFrame(animateAsh)
+/* ================= Single Animation Loop ================= */
+
+function animate() {
+  if (!animationRunning) return
+
+  const starCanvas = globalStars.value
+  const ashCanvas = ashLayer.value
+
+  if (!starCanvas || !ashCanvas) return
+
+  const starCtx = starCanvas.getContext('2d')
+  const ashCtx = ashCanvas.getContext('2d')
+
+  const dpr = Math.min(window.devicePixelRatio || 1, 2)
+  const width = starCanvas.width / dpr
+  const height = starCanvas.height / dpr
+
+  starCtx.clearRect(0, 0, starCanvas.width, starCanvas.height)
+  ashCtx.clearRect(0, 0, ashCanvas.width, ashCanvas.height)
+
+  drawStars(starCtx, width, height)
+  drawAsh(ashCtx, width, height)
+
+  requestAnimationFrame(animate)
 }
 
 /* ================= Resize Handling ================= */
@@ -242,24 +264,7 @@ function handleResize() {
   resizeTimeout = setTimeout(() => {
     resizeCanvas(globalStars.value)
     resizeCanvas(ashLayer.value)
-
-    initStars()
-    initAsh()
   }, 150)
-}
-
-/* ================= Reveal Observer ================= */
-
-function initRevealObserver() {
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting)
-        entry.target.classList.add('visible')
-    })
-  }, { threshold: 0.15 })
-
-  document.querySelectorAll('.reveal')
-    .forEach(el => observer.observe(el))
 }
 
 /* ================= Lifecycle ================= */
@@ -270,48 +275,52 @@ onMounted(() => {
 
   initStars()
   initAsh()
-  initRevealObserver()
+  initRevealObserver() // ← add this back
 
   window.addEventListener('resize', handleResize, { passive: true })
-
   window.visualViewport?.addEventListener('resize', handleResize)
 
-  requestAnimationFrame(animateStars)
-  requestAnimationFrame(animateAsh)
+  requestAnimationFrame(animate)
 })
 
 onBeforeUnmount(() => {
   animationRunning = false
-  window.removeEventListener('resize', handleResize)
-})
 
+  window.removeEventListener('resize', handleResize)
+  window.visualViewport?.removeEventListener('resize', handleResize)
+})
 </script>
 
 <style>
+
+/* ================= Font ================= */
 
 @font-face {
   font-family: 'Jersey';
   src: url('./assets/font/Jersey.ttf') format('truetype');
 }
 
-html {
-  scroll-behavior: smooth;
-}
+/* ================= Base Layout ================= */
 
-#trailer {
-  scroll-margin-top: 120px;
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #020510; /* fallback so page never turns white */
 }
-
-/* ================= Layout Base ================= */
 
 body {
-  margin: 0;
   font-family: 'Jersey', sans-serif;
-  background: linear-gradient(to bottom, #020510 0%, #0d1430 100%);
   color: white;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+}
+
+/* Main wrapper gradient */
+.page {
+  position: relative;
+  min-height: 100dvh;
+  background: linear-gradient(to bottom, #020510 0%, #0d1430 100%);
 }
 
 /* ================= Canvas Layers ================= */
@@ -323,24 +332,40 @@ body {
   left: 0;
   width: 100vw;
   height: 100vh;
+  pointer-events: none;
 }
 
 .global-stars { z-index: 0; }
-.ash-layer { z-index: 2; }
+.ash-layer { z-index: 1; }
 
-/* ================= Hero ================= */
+/* ================= Hero Section ================= */
 
 .hero-section {
   position: relative;
-  height: 100vh;
+  min-height: 100dvh;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
+  z-index: 2;
 }
 
-.hero-background { position: absolute; inset: 0; background: linear-gradient(to bottom, rgba(2,5,16,0.4), rgba(2,5,16,0.9)), url('./assets/images/background.png') center center no-repeat; background-size: cover; z-index: 0; }
+/* Corrected background */
+.hero-background {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
 
+  background:
+    linear-gradient(to bottom, rgba(2,5,16,0.4), rgba(2,5,16,0.9)),
+    url('./assets/images/background.png');
+
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+/* Hero Content */
 .hero-content {
   position: relative;
   z-index: 3;
@@ -385,7 +410,6 @@ body {
 
 .primary-btn {
   background: rgba(220,50,70,0.9);
-  animation: glowPulse 3s ease-in-out infinite;
 }
 
 .primary-btn:hover {
@@ -403,18 +427,19 @@ body {
   box-shadow: 0 0 20px rgba(220,50,70,0.6);
 }
 
-@keyframes glowPulse {
-  0%,100% { box-shadow: 0 0 15px rgba(220,50,70,0.4); }
-  50% { box-shadow: 0 0 35px rgba(220,50,70,0.7); }
-}
-
 /* ================= Game Section ================= */
 
 .game-section {
+  position: relative;
+  z-index: 2;
   padding: 80px 10%;
+
   background:
     linear-gradient(to bottom, rgba(10,15,36,0.95), rgba(20,25,55,0.9)),
-    url('./assets/images/background.png') center top no-repeat;
+    url('./assets/images/background.png');
+
+  background-position: center top;
+  background-repeat: no-repeat;
   background-size: cover;
 }
 
@@ -453,7 +478,6 @@ body {
   width: 100%;
   border-radius: 20px;
   transition: transform 0.5s ease;
-  will-change: transform;
 }
 
 .media-card:hover {
@@ -464,7 +488,7 @@ body {
 
 .trailer iframe {
   margin-top: 40px;
-	width: 100%;
+  width: 100%;
   aspect-ratio: 16 / 9;
   max-width: 1000px;
   border-radius: 24px;
@@ -481,8 +505,6 @@ body {
 .whisper-footer {
   text-align: center;
   padding: 140px 20px;
-  opacity: 0;
-  animation: fadeInWhisper 3s ease forwards 2s;
 }
 
 .whisper-text {
@@ -490,10 +512,6 @@ body {
   letter-spacing: 4px;
   color: rgba(255,255,255,0.6);
   text-transform: uppercase;
-}
-
-@keyframes fadeInWhisper {
-  to { opacity: 1; }
 }
 
 /* ================= Reveal Animation ================= */
