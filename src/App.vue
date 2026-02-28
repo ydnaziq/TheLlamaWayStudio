@@ -70,17 +70,18 @@
             A heroic tale woven into a haunting 2D platformer.
           </p>
 
-          <div class="itch-wrapper">
-            <iframe
-              frameborder="0"
-              src="https://itch.io/embed/4293036"
-              width="552"
-              height="167">
-              <a href="https://thellamaway.itch.io/the-last-cat-on-earth">
-                The Last Cat (on earth) by TheLlamaWay
-              </a>
-            </iframe>
-          </div>
+<div class="itch-wrapper">
+  <iframe
+    frameborder="0"
+    src="https://itch.io/embed/4293036"
+    width="552"
+    height="167">
+  </iframe>
+  <a href="https://thellamaway.itch.io/the-last-cat-on-earth">
+    The Last Cat (on earth) by TheLlamaWay
+  </a>
+</div>
+
         </div>
 
         <!-- MEDIA -->
