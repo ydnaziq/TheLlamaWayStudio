@@ -15,7 +15,7 @@
   <div class="hero-content">
     <h1 class="game-title">The Last Cat</h1>
     <p class="game-tagline">
-      A ritual demands something living.
+      Releasing on Steam and IOS in Summer 2026.
     </p>
 
     <div class="hero-buttons">
