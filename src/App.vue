@@ -72,15 +72,15 @@
             A heroic tale woven into a haunting 2D platformer.
           </p>
 
-<div class="itch-wrapper">
+<div class="itch-wrapper" style="max-width: 600px; margin: auto;">
   <iframe
     frameborder="0"
     src="https://itch.io/embed/4293036"
     width="552"
-    height="167">
+    height="167"
+    allowfullscreen>
   </iframe>
   <a href="https://thellamaway.itch.io/the-last-cat-on-earth">
-    The Last Cat (on earth) by TheLlamaWay
   </a>
 </div>
 
@@ -125,19 +125,17 @@ import screenshot2 from './assets/images/screenshot2.png'
 
 const globalStars = ref(null)
 const ashLayer = ref(null)
+const trailerRef = ref(null)
 
 const isMobile = window.innerWidth < 768
-
 const STAR_COUNT = isMobile ? 70 : 100
-const ASH_COUNT = isMobile ? 70: 100
+const ASH_COUNT = isMobile ? 70 : 100
 
 let animationRunning = true
 let stars = []
 let ashParticles = []
-let resizeTimeout
 
-const trailerRef = ref(null)
-
+/* ================= Scroll to Trailer ================= */
 function scrollToTrailer() {
   trailerRef.value?.scrollIntoView({
     behavior: 'smooth',
@@ -146,41 +144,31 @@ function scrollToTrailer() {
 }
 
 /* ================= Canvas Resize ================= */
-
 function resizeCanvas(canvas) {
   if (!canvas) return
-
   const ctx = canvas.getContext('2d')
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
-
   const width = window.innerWidth
   const height = window.innerHeight
-
   canvas.style.width = width + 'px'
   canvas.style.height = height + 'px'
-
   canvas.width = width * dpr
   canvas.height = height * dpr
-
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
 }
 
+/* ================= Reveal Animation ================= */
 function initRevealObserver() {
   const elements = document.querySelectorAll('.reveal')
-
-  const observer = new IntersectionObserver((entries) => {
+  const observer = new IntersectionObserver(entries => {
     entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('visible')
-      }
+      if (entry.isIntersecting) entry.target.classList.add('visible')
     })
   }, { threshold: 0.1 })
-
   elements.forEach(el => observer.observe(el))
 }
 
 /* ================= Particle Init ================= */
-
 function initStars() {
   stars = Array.from({ length: STAR_COUNT }, () => ({
     x: Math.random() * window.innerWidth,
@@ -202,22 +190,17 @@ function initAsh() {
 }
 
 /* ================= Drawing ================= */
-
 function drawStars(ctx, width, height) {
   stars.forEach(star => {
     star.y += star.speed * (1 + star.depth)
-
     if (star.y > height) {
       star.y = 0
       star.x = Math.random() * width
     }
-
-    // soft glow (no shadowBlur)
     ctx.beginPath()
     ctx.arc(star.x, star.y, star.r * 1.8, 0, Math.PI * 2)
     ctx.fillStyle = 'rgba(255,255,255,0.08)'
     ctx.fill()
-
     ctx.beginPath()
     ctx.arc(star.x, star.y, star.r, 0, Math.PI * 2)
     ctx.fillStyle = `rgba(255,255,255,${0.5 + star.depth})`
@@ -228,12 +211,10 @@ function drawStars(ctx, width, height) {
 function drawAsh(ctx, width, height) {
   ashParticles.forEach(p => {
     p.y -= p.speed
-
     if (p.y < 0) {
       p.y = height
       p.x = Math.random() * width
     }
-
     ctx.beginPath()
     ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2)
     ctx.fillStyle = `rgba(220,50,70,${p.opacity})`
@@ -241,67 +222,48 @@ function drawAsh(ctx, width, height) {
   })
 }
 
-/* ================= Single Animation Loop ================= */
-
+/* ================= Animation Loop ================= */
 function animate() {
   if (!animationRunning) return
-
   const starCanvas = globalStars.value
   const ashCanvas = ashLayer.value
-
   if (!starCanvas || !ashCanvas) return
-
   const starCtx = starCanvas.getContext('2d')
   const ashCtx = ashCanvas.getContext('2d')
-
   const dpr = Math.min(window.devicePixelRatio || 1, 2)
   const width = starCanvas.width / dpr
   const height = starCanvas.height / dpr
-
   starCtx.clearRect(0, 0, starCanvas.width, starCanvas.height)
   ashCtx.clearRect(0, 0, ashCanvas.width, ashCanvas.height)
-
   drawStars(starCtx, width, height)
   drawAsh(ashCtx, width, height)
-
   requestAnimationFrame(animate)
 }
 
 /* ================= Resize Handling ================= */
-
 let lastWidth = window.innerWidth
-
 function handleResize() {
   const newWidth = window.innerWidth
-
-  // Ignore height-only changes (mobile address bar scroll)
   if (newWidth === lastWidth) return
-
   lastWidth = newWidth
-
   resizeCanvas(globalStars.value)
   resizeCanvas(ashLayer.value)
 }
 
 /* ================= Lifecycle ================= */
-
 onMounted(() => {
   resizeCanvas(globalStars.value)
   resizeCanvas(ashLayer.value)
-
   initStars()
   initAsh()
-  initRevealObserver() // ← add this back
-
+  initRevealObserver()
   window.addEventListener('resize', handleResize, { passive: true })
   window.visualViewport?.addEventListener('resize', handleResize)
-
   requestAnimationFrame(animate)
 })
 
 onBeforeUnmount(() => {
   animationRunning = false
-
   window.removeEventListener('resize', handleResize)
   window.visualViewport?.removeEventListener('resize', handleResize)
 })
@@ -507,12 +469,12 @@ body {
 .content-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 80px;
+  gap: 20px;
 }
 
 .story-card {
   background: rgba(10,15,36,0.7);
-  padding: 30px;
+  padding: 20px;
   border-radius: 22px;
   backdrop-filter: blur(14px);
   border: 0.5px solid rgba(255,255,255,0.05);
@@ -526,7 +488,7 @@ body {
 .media-stack {
   display: flex;
   flex-direction: column;
-  gap: 50px;
+  gap: 40px;
 }
 
 .media-card {
