@@ -20,7 +20,7 @@
           <button class="modal-close" @click="showEmailModal = false" aria-label="Close">✕</button>
           <p class="modal-eyebrow">THE LAST CAT</p>
           <h2 class="modal-title">Get notified on launch</h2>
-          <p class="modal-sub">Be the first to know when we drop on Steam & iOS.</p>
+          <p class="modal-sub">Enter your email and I'll give you a cookie!</p>
 
           <div v-if="!emailSubmitted">
             <!-- Netlify form: data-netlify="true" + hidden input are required -->
@@ -28,7 +28,6 @@
               name="notify"
               method="POST"
               data-netlify="true"
-              @submit.prevent="handleEmailSubmit"
               class="email-form"
             >
               <input type="hidden" name="form-name" value="notify" />
