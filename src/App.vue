@@ -28,6 +28,7 @@
               name="notify"
               method="POST"
               data-netlify="true"
+              @submit.prevent="handleEmailSubmit"
               class="email-form"
             >
               <input type="hidden" name="form-name" value="notify" />
